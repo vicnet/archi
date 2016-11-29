@@ -1,0 +1,15 @@
+@startuml
+[*] --> INIT
+INIT --> DRAW : [isClosedCards] click.closed
+INIT --> TAKE : [isOpenCards] click.open
+GAME : entry:repositionCard()
+GAME --> DRAW : [isClosedCards] click.closed / playCard()
+GAME --> TAKE : [isOpenCards] click.open / playCard()
+GAME --> GAME : click.active / rotateCard()
+DRAW : entry:auto()
+DRAW : exit:drawCard()
+DRAW --> GAME : auto
+TAKE : entry:auto()
+TAKE : exit:takeCard()
+TAKE --> GAME : auto
+@enduml
