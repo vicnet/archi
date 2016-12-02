@@ -86,6 +86,9 @@ $(window).on('load', function () {
                 trigger: 'click.active',
                 action: 'rotateCard',
                 dest: 'GAME'
+            }, {
+                trigger: 'drop',
+                dest: 'GAME'
             }]
         }, {
             name: 'DRAW',
@@ -110,22 +113,37 @@ $(window).on('load', function () {
         }],
 
         repositionCard: function() {
-            var card = this.active;
-            console.log('Reposition card', card[0].id,'rotate',card[0].rotation);
+            var $card = this.active;
+            console.log('Reposition card', $card[0].id,'rotate', $card[0].rotation);
             var grid;
-            var pos = card.position();
+            var pos = $card.position();
+/*
             if ((card.rotation!=0) || (card.rotation!=180)) {
                 grid = card.width()/2;
             } else {
                 grid = card.height()/2;
+            }
+*/
+            if (($card[0].rotation===90) || ($card[0].rotation===270)) {
+                grid = $card.height()/2;
+            } else {
+                grid = $card.width()/2;
             }
             var x = Math.round(pos.left/grid)*grid;
             x = Math.max(x,0);
             var y = Math.round(pos.top/grid)*grid;
             y = Math.max(y,0);
             console.log('Reposition active from', pos, 'to', x,y);
-            card[0].style.left = x + "px";
-            card[0].style.top = y + "px";
+            $card[0].style.left = x + "px";
+            $card[0].style.top = y + "px";
+        },
+        activateCard: function($card) {
+            // add on active
+            $('#active').append($card);
+            $card.draggable();
+            this.active = $card;
+            console.log('Active',this.active[0]);
+            this.played = null;
         },
         drawCard: function() {
             console.log('Draw a closed card, put in game');
@@ -133,22 +151,19 @@ $(window).on('load', function () {
             this.played.remove();
             // get new one
             var card = model.drawCard();
-            // add on game
+            // create new card
             var src = 'src="cards/' + card + '.png" ';
             var id = 'id="' + card + '" ';
-            $('#active').append('<img class="card"' + id + src + "></img>");
-            this.active = $('#'+card);
-            console.log('Active',this.active[0]);
-            this.played = null;
+            var $card = $('<img class="card"' + id + src + '></img>');
+            // add on active
+            this.activateCard($card);
         },
         takeCard: function() {
             console.log('Take an open card, put in game');
             // remove from draft
             this.played.remove();
-            $('#active').append(this.played);
-            this.active = this.played;
-            console.log('Active',this.active[0]);
-            this.played = null;
+            // add on active
+            this.activateCard(this.played);
         },
         rotateCard: function() {
             var $card = this.active;
@@ -169,17 +184,14 @@ $(window).on('load', function () {
             return $('#open').children().length>0;
         },
         playCard: function() {
-            var card = this.active;
-            console.log('Play active card', card[0].id);
+            var $card = this.active;
+            console.log('Play active card', $card[0].id);
             // remove from active
-            card.remove();
+            $card.draggable('destroy');
+            $card.remove();
             // add on game
-            $('#board').append(card);
+            $('#board').append($card);
             this.active = null;
-            var x = Math.random()*500;
-            var y = Math.random()*300;
-            card[0].style.left = x + "px";
-            card[0].style.top = y + "px";
         }
     };
     
@@ -195,14 +207,11 @@ $(window).on('load', function () {
         app.handleStateTrigger('click.'+hand)
     });
     
-//    toPlantum(app.states);
-/*
-    $( "#test3" ).draggable();
-
-    $( "#board" ).droppable({
-        drop: function( event, ui ) {
+    $("#active").droppable({
+        drop: function(event, ui) {
             console.log("Drop on", ui.draggable, "at", ui.position);
+            app.handleStateTrigger('drop');
         }
     });
-*/
+//    toPlantum(app.states);
 });
